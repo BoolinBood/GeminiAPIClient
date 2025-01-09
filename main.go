@@ -16,7 +16,7 @@ func main() {
 	app.Post("/function", http.FunctionCalling)
 
 	// Sockets
-	//app.Get("/ws", websocket.New(socket.WebSocketHandler))
+	app.Get("/ws", websocket.New(socket.WebSocketHandler))
 	app.Get("/ws/audio", websocket.New(socket.AudioStreamHandler))
 
 	err := app.Listen(":8080")
