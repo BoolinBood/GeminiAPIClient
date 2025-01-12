@@ -90,8 +90,10 @@ func AudioStreamHandler(c *websocket.Conn) {
 	utils.PrintResponse(resp)
 
 	textToPublish := string(resp.Candidates[0].Content.Parts[0].(genai.Text))
+
 	err = mqtt.PublishMessage("ai/gif_keyword", textToPublish)
 	err = mqtt.PublishAudio("audio/speech", OutputAudioFilePath)
+
 	if err != nil {
 		return
 	}
