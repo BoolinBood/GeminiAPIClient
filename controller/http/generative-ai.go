@@ -2,11 +2,12 @@ package http
 
 import (
 	"context"
+	"geminiapiclient/ai"
 	"os"
+	"time"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/generative-ai-go/genai"
-	"google.golang.org/api/option"
 )
 
 type generativeAIBody struct {
@@ -16,16 +17,25 @@ type generativeAIBody struct {
 func GenerativeAI(c *fiber.Ctx) error {
 	body := new(generativeAIBody)
 	if err := c.BodyParser(&body); err != nil {
-		println(err.Error())
-		return c.Status(fiber.StatusBadRequest).SendString("Unable to parse Body")
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error":   "Unable to parse body",
+			"details": err.Error(),
+		})
 	}
-	ctx := context.Background()
-	client, err := genai.NewClient(ctx, option.WithAPIKey(os.Getenv("GEMINI_API_KEY")))
+
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+	client, err := ai.GetGeminiClient()
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).SendString(err.Error())
 	}
 
-	model := client.GenerativeModel("gemini-2.0-flash-exp")
+	version := os.Getenv("GEMINI_VERSION")
+	if version == "" {
+		return c.Status(fiber.StatusInternalServerError).SendString("GEMINI_VERSION environment variable is not set")
+	}
+
+	model := client.GenerativeModel(version)
 
 	session := model.StartChat()
 

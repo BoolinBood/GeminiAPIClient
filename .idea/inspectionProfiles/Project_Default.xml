@@ -1,0 +1,16 @@
+<component name="InspectionProjectProfileManager">
+  <profile version="1.0">
+    <option name="myName" value="Project Default" />
+    <inspection_tool class="GoDfaErrorMayBeNotNil" enabled="true" level="WARNING" enabled_by_default="true">
+      <functions>
+        <function importPath="github.com/google/generative-ai-go/genai" name="NewClient" />
+        <function importPath="net/http" name="NewRequest" />
+        <function importPath="geminiapiclient/utils/ai" name="GetGeminiClient" />
+      </functions>
+      <methods>
+        <method importPath="github.com/google/generative-ai-go/genai" receiver="*ChatSession" name="SendMessage" />
+        <method importPath="github.com/google/generative-ai-go/genai" receiver="*GenerativeModel" name="GenerateContent" />
+      </methods>
+    </inspection_tool>
+  </profile>
+</component>

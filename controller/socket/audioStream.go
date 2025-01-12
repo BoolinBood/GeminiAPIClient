@@ -2,18 +2,25 @@ package socket
 
 import (
 	"fmt"
+	ai2 "geminiapiclient/ai"
+	"geminiapiclient/mqtt"
 	"geminiapiclient/utils"
 	"github.com/gofiber/websocket/v2"
+	"github.com/google/generative-ai-go/genai"
 	"log"
 	"os"
 	"os/exec"
 )
 
+const (
+	InputAudioFilePath  = "./data/audio/input/audio_stream_input.wav"
+	OutputAudioFilePath = "./data/audio/output/audio_stream_output.wav"
+)
+
 func AudioStreamHandler(c *websocket.Conn) {
 	log.Println("Audio Stream Handler Connected")
 
-	fileName := "audio_stream.wav"
-	file, err := os.Create(fileName)
+	file, err := os.Create(InputAudioFilePath)
 
 	if err != nil {
 		log.Println("Error creating file:", err)
@@ -22,7 +29,10 @@ func AudioStreamHandler(c *websocket.Conn) {
 
 	defer func() {
 		// Ensure the file is closed and flushed when WebSocket connection is done
-		file.Close()
+		err := file.Close()
+		if err != nil {
+			return
+		}
 		log.Println("File closed successfully.")
 	}()
 
@@ -60,7 +70,7 @@ func AudioStreamHandler(c *websocket.Conn) {
 		}
 	}
 	// Compress .wav to .mp3
-	err = convertWavToMp3(fileName, "audio_stream.mp3")
+	err = convertWavToMp3(InputAudioFilePath, OutputAudioFilePath)
 	if err != nil {
 		log.Println("Error converting .wav to .mp3:", err)
 	} else {
@@ -68,7 +78,25 @@ func AudioStreamHandler(c *websocket.Conn) {
 	}
 
 	// Call Speech To Text Provider
-	utils.SpeechToText("audio_stream.mp3")
+	geminiResponse := ai2.GeminiSpeechToText(OutputAudioFilePath)
+	textPrompt := geminiResponse.Candidates[0].Content.Parts[0]
+
+	// Insert Text to Prompt
+	resp := ai2.GeminiFunctionCallFromTextPrompt(textPrompt.(genai.Text))
+	if resp == nil {
+		log.Println("Gemini Function Call Failed")
+		return
+	}
+	utils.PrintResponse(resp)
+
+	textToPublish := string(resp.Candidates[0].Content.Parts[0].(genai.Text))
+	err = mqtt.PublishMessage("ai/gif_keyword", textToPublish)
+	err = mqtt.PublishAudio("audio/speech", OutputAudioFilePath)
+	if err != nil {
+		return
+	}
+
+	log.Println("Audio Stream Handler Disconnected")
 }
 
 func convertWavToMp3(wavFile, mp3File string) error {

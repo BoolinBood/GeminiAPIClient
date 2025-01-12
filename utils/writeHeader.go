@@ -11,7 +11,7 @@ func WriteWavHeader(file *os.File, sampleRate, numChannels, numSamples int) erro
 	file.Write([]byte("RIFF"))
 
 	// Chunk size
-	chunkSize := 36 + numSamples*2 * numChannels
+	chunkSize := 36 + numSamples*2*numChannels
 	binary.Write(file, binary.LittleEndian, uint32(chunkSize))
 
 	// Format

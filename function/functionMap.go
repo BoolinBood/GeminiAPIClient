@@ -2,17 +2,25 @@ package function
 
 import (
 	"fmt"
+	"geminiapiclient/function/grounding"
 	"geminiapiclient/function/lights"
+	"geminiapiclient/function/spotify"
+	"log"
 	"reflect"
 )
 
 var Map = map[string]interface{}{
 	"LivingRoomLight": lights.LivingRoomLight,
+	"SearchSong":      spotify.SearchSong,
+	"PlaySong":        spotify.PlaySong,
+	"GoogleSearch":    grounding.GoogleSearch,
 }
 
 func CallFunctionByName(name string, args ...interface{}) ([]interface{}, error) {
 	// Get the function from the map
 	fn, exists := Map[name]
+
+	// Replace error handling with useful prompt for better experience
 	if !exists {
 		return nil, fmt.Errorf("function %s not found", name)
 	}
@@ -27,12 +35,13 @@ func CallFunctionByName(name string, args ...interface{}) ([]interface{}, error)
 	reflectArgs := make([]reflect.Value, len(args))
 	for i, arg := range args {
 		reflectArgs[i] = reflect.ValueOf(arg)
+		log.Println("reflectArgs:", reflectArgs[i])
 	}
 
 	// Call the function
 	results := fnValue.Call(reflectArgs)
 
-	// Convert the reflect.Value results to a slice of interface{}
+	// Convert the reflect Value results to a slice of interface{}
 	output := make([]interface{}, len(results))
 	for i, result := range results {
 		output[i] = result.Interface()
