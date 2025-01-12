@@ -1,9 +1,7 @@
 # Use the official Golang image as the base image
-FROM golang:1.20
+FROM golang:1.23.4
 
 RUN apt-get update && apt-get install -y ffmpeg
-
-
 
 # Set the working directory inside the container
 WORKDIR /app

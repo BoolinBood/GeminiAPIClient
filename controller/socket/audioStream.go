@@ -69,6 +69,7 @@ func AudioStreamHandler(c *websocket.Conn) {
 			}
 		}
 	}
+
 	// Compress .wav to .mp3
 	err = convertWavToMp3(InputAudioFilePath, OutputAudioFilePath)
 	if err != nil {
@@ -78,26 +79,32 @@ func AudioStreamHandler(c *websocket.Conn) {
 	}
 
 	// Call Speech To Text Provider
-	geminiResponse := ai2.GeminiSpeechToText(OutputAudioFilePath)
-	textPrompt := geminiResponse.Candidates[0].Content.Parts[0]
+	//geminiResponse := ai2.GeminiSpeechToText(OutputAudioFilePath, "Generate a transcript of the speech.")
+
+	//textPrompt := geminiResponse.Candidates[0].Content.Parts[0].(genai.Text)
+	textPrompt := "Play Shape of You By Ed Sheeran"
 
 	// Insert Text to Prompt
-	resp := ai2.GeminiFunctionCallFromTextPrompt(textPrompt.(genai.Text))
+	resp := ai2.GeminiFunctionCallFromTextPrompt(genai.Text(textPrompt))
 	if resp == nil {
 		log.Println("Gemini Function Call Failed")
 		return
 	}
-	utils.PrintResponse(resp)
 
-	textToPublish := string(resp.Candidates[0].Content.Parts[0].(genai.Text))
+	textToPrompt := string(resp.Candidates[0].Content.Parts[0].(genai.Text))
 
-	err = mqtt.PublishMessage("ai/gif_keyword", textToPublish)
-	err = mqtt.PublishAudio("audio/speech", OutputAudioFilePath)
+	textEmotion := string(ai2.GeminiTextPrompt(textToPrompt, "Describe what the reader should feel about this text in one word").Candidates[0].Content.Parts[0].(genai.Text))
 
+	log.Println("Gemini Function Call Response:", textEmotion)
+
+	err = mqtt.PublishMessage("ai/gif_keyword", textEmotion)
 	if err != nil {
 		return
 	}
-
+	err = mqtt.PublishAudio("audio/speech", OutputAudioFilePath)
+	if err != nil {
+		return
+	}
 	log.Println("Audio Stream Handler Disconnected")
 }
 

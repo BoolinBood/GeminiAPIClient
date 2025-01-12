@@ -14,18 +14,18 @@ import (
 
 // SpeechToText Access your API key as an environment variable
 
-func GeminiSpeechToText(pathToAudioFile string) *genai.GenerateContentResponse {
+func GeminiSpeechToText(pathToAudioFile string, audioPrompt string) *genai.GenerateContentResponse {
 	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
 	defer cancel()
 
 	client, err := GetGeminiClient()
 	if err != nil {
-		log.Fatalf("Failed to get Gemini client: %v", err)
+		log.Println("Failed to get Gemini client: %v", err)
 		return nil
 	}
 
 	if !filesys.FileExists(pathToAudioFile) {
-		log.Fatalf("Audio file %s does not exist", pathToAudioFile)
+		log.Println("Audio file %s does not exist", pathToAudioFile)
 		return nil
 	}
 
@@ -58,7 +58,7 @@ func GeminiSpeechToText(pathToAudioFile string) *genai.GenerateContentResponse {
 
 	prompt := []genai.Part{
 		genai.FileData{URI: file.URI},
-		genai.Text("Generate a transcript of the speech."),
+		genai.Text(audioPrompt),
 	}
 
 	// Generate content using the prompt.
