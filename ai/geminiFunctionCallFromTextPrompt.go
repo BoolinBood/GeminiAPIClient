@@ -28,7 +28,11 @@ func GeminiFunctionCallFromTextPrompt(textPrompt genai.Text) *genai.GenerateCont
 	}
 
 	session := model.StartChat()
-	messageResp, err := session.SendMessage(ctx, textPrompt)
+	prompt := []genai.Part{
+		textPrompt,
+		genai.Text("Translate the text to English with friendly accent"),
+	}
+	messageResp, err := session.SendMessage(ctx, prompt...)
 	if err != nil {
 		log.Printf("Failed to generate content: %v\n", err)
 	}
@@ -47,11 +51,15 @@ func GeminiFunctionCallFromTextPrompt(textPrompt genai.Text) *genai.GenerateCont
 		log.Printf("Error calling function: %v\n", err)
 	}
 
-	// Send the API result back to the generative model
-	resp, err := session.SendMessage(ctx, genai.FunctionResponse{
-		Name:     functionToCall.Name,
-		Response: result[0].(map[string]any),
-	})
-
-	return resp
+	if result != nil {
+		// Send the API result back to the generative model
+		resp, _ := session.SendMessage(ctx, genai.FunctionResponse{
+			Name:     functionToCall.Name,
+			Response: result[0].(map[string]any),
+		})
+		return resp
+	} else {
+		resp, _ := session.SendMessage(ctx, textPrompt)
+		return resp
+	}
 }

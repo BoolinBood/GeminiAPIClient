@@ -29,7 +29,8 @@ func main() {
 
 	// Sockets
 	app.Get("/ws", websocket.New(socket.WebSocketHandler))
-	app.Get("/ws/audio", websocket.New(socket.AudioStreamHandler))
+	app.Get("/ws/audio/input", websocket.New(socket.AudioInputStreamHandler))
+	app.Get("/ws/audio/output", websocket.New(socket.AudioOutputStreamHandler))
 
 	log.Println("Listening on port 8080")
 	log.Println("Gemini Version:", os.Getenv("GEMINI_VERSION"))

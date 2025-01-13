@@ -1,6 +1,7 @@
 package socket
 
 import (
+	"encoding/json"
 	"fmt"
 	ai2 "geminiapiclient/ai"
 	"geminiapiclient/mqtt"
@@ -13,14 +14,18 @@ import (
 )
 
 const (
-	InputAudioFilePath  = "./data/audio/input/audio_stream_input.wav"
-	OutputAudioFilePath = "./data/audio/output/audio_stream_output.wav"
+	InputAudioFilePath  = "./data/audio/input/"
+	OutputAudioFilePath = "./data/audio/output/"
 )
 
-func AudioStreamHandler(c *websocket.Conn) {
+type TriggerFileDownloadPayload struct {
+	IsReady bool `json:"isReady"`
+}
+
+func AudioInputStreamHandler(c *websocket.Conn) {
 	log.Println("Audio Stream Handler Connected")
 
-	file, err := os.Create(InputAudioFilePath)
+	file, err := os.Create(InputAudioFilePath + "audio_stream_input.wav")
 
 	if err != nil {
 		log.Println("Error creating file:", err)
@@ -71,7 +76,7 @@ func AudioStreamHandler(c *websocket.Conn) {
 	}
 
 	// Compress .wav to .mp3
-	err = convertWavToMp3(InputAudioFilePath, OutputAudioFilePath)
+	err = convertWavToMp3(InputAudioFilePath, OutputAudioFilePath+"audio_stream_output.wav")
 	if err != nil {
 		log.Println("Error converting .wav to .mp3:", err)
 	} else {
@@ -79,13 +84,12 @@ func AudioStreamHandler(c *websocket.Conn) {
 	}
 
 	// Call Speech To Text Provider
-	//geminiResponse := ai2.GeminiSpeechToText(OutputAudioFilePath, "Generate a transcript of the speech.")
+	geminiResponse := ai2.GeminiSpeechToText(OutputAudioFilePath+"audio_stream_output.wav", "Generate a transcript of the speech.")
 
-	//textPrompt := geminiResponse.Candidates[0].Content.Parts[0].(genai.Text)
-	textPrompt := "Play Shape of You By Ed Sheeran"
+	textPrompt := geminiResponse.Candidates[0].Content.Parts[0].(genai.Text)
 
 	// Insert Text to Prompt
-	resp := ai2.GeminiFunctionCallFromTextPrompt(genai.Text(textPrompt))
+	resp := ai2.GeminiFunctionCallFromTextPrompt(textPrompt)
 	if resp == nil {
 		log.Println("Gemini Function Call Failed")
 		return
@@ -93,18 +97,25 @@ func AudioStreamHandler(c *websocket.Conn) {
 
 	textToPrompt := string(resp.Candidates[0].Content.Parts[0].(genai.Text))
 
-	textEmotion := string(ai2.GeminiTextPrompt(textToPrompt, "Describe what the reader should feel about this text in one word").Candidates[0].Content.Parts[0].(genai.Text))
+	textEmotion := string(ai2.GeminiTextPrompt(textToPrompt, "Describe what the reader should feel about this text in one word and you must tell me exactly one word").Candidates[0].Content.Parts[0].(genai.Text))
 
 	log.Println("Gemini Function Call Response:", textEmotion)
 
-	err = mqtt.PublishMessage("ai/gif_keyword", textEmotion)
+	err = mqtt.PublishMessage(mqtt.GifKeywordTopic, textEmotion)
 	if err != nil {
 		return
 	}
-	err = mqtt.PublishAudio("audio/speech", OutputAudioFilePath)
+	isReady, err := utils.TextToSpeechAudio(textToPrompt)
+	payload := TriggerFileDownloadPayload{IsReady: isReady}
+	jsonData, err := json.Marshal(payload)
+	if err != nil {
+		log.Println("Error marshalling payload:", err)
+	}
+	err = mqtt.PublishMessage(mqtt.TriggerAudioDownloadTopic, string(jsonData))
 	if err != nil {
 		return
 	}
+
 	log.Println("Audio Stream Handler Disconnected")
 }
 

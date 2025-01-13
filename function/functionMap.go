@@ -22,6 +22,7 @@ func CallFunctionByName(name string, args ...interface{}) ([]interface{}, error)
 
 	// Replace error handling with useful prompt for better experience
 	if !exists {
+
 		return nil, fmt.Errorf("function %s not found", name)
 	}
 

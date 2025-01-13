@@ -1,0 +1,5 @@
+package grounding
+
+func ContentGenerate() {
+
+}

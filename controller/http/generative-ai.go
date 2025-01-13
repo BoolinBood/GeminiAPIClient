@@ -44,5 +44,5 @@ func GenerativeAI(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusInternalServerError).SendString(err.Error())
 	}
 
-	return c.Status(fiber.StatusOK).JSON(resp.Candidates[0].Content.Parts[0])
+	return c.Status(fiber.StatusOK).JSON(resp.Candidates[0].Content.Parts)
 }

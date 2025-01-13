@@ -4,6 +4,11 @@ import (
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 )
 
+const (
+	TriggerAudioDownloadTopic = "action/audio/speech"
+	GifKeywordTopic           = "ai/gif_keyword"
+)
+
 func PublishMessage(topic string, message string) error {
 	// Create the MQTT client options
 
