@@ -5,7 +5,6 @@ import (
 	// Import the GenerativeAI package for Go
 	"context"
 	"geminiapiclient/filesys"
-	"geminiapiclient/utils"
 	"github.com/google/generative-ai-go/genai"
 	"log"
 	"os"
@@ -63,9 +62,6 @@ func GeminiSpeechToText(pathToAudioFile string, audioPrompt string) *genai.Gener
 
 	// Generate content using the prompt.
 	resp, err := model.GenerateContent(ctx, prompt...)
-
-	log.Println("Gemini thought you're saying: ")
-	utils.PrintResponse(resp)
 
 	if err != nil {
 		log.Printf("Error generating content: %v", err)

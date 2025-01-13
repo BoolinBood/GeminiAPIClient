@@ -3,7 +3,6 @@ package ai
 import (
 	"context"
 	"geminiapiclient/function"
-	"geminiapiclient/utils"
 	"github.com/google/generative-ai-go/genai"
 	"log"
 	"os"
@@ -19,8 +18,6 @@ func GeminiFunctionCallFromTextPrompt(textPrompt genai.Text) *genai.GenerateCont
 		log.Fatalf("Failed to get Gemini client: %v", err)
 	}
 
-	log.Println("Gemini is thinking...")
-
 	model := client.GenerativeModel(os.Getenv("GEMINI_VERSION"))
 	model.Tools = GetGeminiModelTools()
 	if model == nil {
@@ -30,13 +27,11 @@ func GeminiFunctionCallFromTextPrompt(textPrompt genai.Text) *genai.GenerateCont
 	session := model.StartChat()
 	prompt := []genai.Part{
 		textPrompt,
-		genai.Text("Translate the text to English with friendly accent"),
 	}
 	messageResp, err := session.SendMessage(ctx, prompt...)
 	if err != nil {
 		log.Printf("Failed to generate content: %v\n", err)
 	}
-	utils.PrintResponse(messageResp)
 
 	part := messageResp.Candidates[0].Content.Parts[0]
 	functionToCall, ok := part.(genai.FunctionCall)

@@ -5,8 +5,8 @@ import (
 )
 
 const (
-	TriggerAudioDownloadTopic = "action/audio/speech"
-	GifKeywordTopic           = "ai/gif_keyword"
+	TextToBeSpeechTopic = "action/audio/speech"
+	GifKeywordTopic     = "ai/gif_keyword"
 )
 
 func PublishMessage(topic string, message string) error {
