@@ -1,7 +1,7 @@
 package ai
 
 import (
-	"geminiapiclient/function/grounding"
+	"geminiapiclient/function/esp32"
 	"geminiapiclient/function/spotify"
 	"github.com/google/generative-ai-go/genai"
 )
@@ -9,10 +9,9 @@ import (
 func GetGeminiModelTools() []*genai.Tool {
 	var geminiTools = []*genai.Tool{{
 		FunctionDeclarations: []*genai.FunctionDeclaration{
-			//lights.LivingRoomLightTool,
+			esp32.LEDControlTool,
 			spotify.SearchSongTool,
-			spotify.PlaySongTool,
-			grounding.GoogleSearchTool,
+			spotify.PlayAlbumTool,
 		},
 	}}
 	return geminiTools

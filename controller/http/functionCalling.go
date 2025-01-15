@@ -70,7 +70,8 @@ func FunctionCalling(c *fiber.Ctx) error {
 
 	result, err := function.CallFunctionByName(funcall.Name, funcall.Args)
 	if err != nil {
-		log.Fatalf("Error calling function: %v\n", err)
+		log.Println("Error calling function: %v\n", err)
+		return c.Status(fiber.StatusInternalServerError).SendString("Error calling function")
 	}
 
 	resultMap, ok := result[0].(map[string]any)
@@ -85,7 +86,7 @@ func FunctionCalling(c *fiber.Ctx) error {
 	})
 
 	if err != nil {
-		log.Fatalf("Error sending message: %v\n", err)
+		log.Println("Error sending message: %v\n", err)
 	}
 
 	return c.Status(fiber.StatusAccepted).JSON(resp.Candidates[0].Content.Parts[0])

@@ -2,18 +2,16 @@ package function
 
 import (
 	"fmt"
-	"geminiapiclient/function/grounding"
-	"geminiapiclient/function/lights"
+	"geminiapiclient/function/esp32"
 	"geminiapiclient/function/spotify"
 	"log"
 	"reflect"
 )
 
 var Map = map[string]interface{}{
-	"LivingRoomLight": lights.LivingRoomLight,
-	"SearchSong":      spotify.SearchSong,
-	"PlaySong":        spotify.PlaySong,
-	"GoogleSearch":    grounding.GoogleSearch,
+	"LEDControl": esp32.LEDControl,
+	"SearchSong": spotify.SearchSong,
+	"PlayAlbum":  spotify.PlayAlbum,
 }
 
 func CallFunctionByName(name string, args ...interface{}) ([]interface{}, error) {

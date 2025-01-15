@@ -21,6 +21,10 @@ type TextToBeSpeech struct {
 	Text string `json:"text"`
 }
 
+type TextEmotion struct {
+	Query string `json:"query"`
+}
+
 func AudioInputStreamHandler(c *websocket.Conn) {
 	log.Println("Audio Stream Handler Connected")
 
@@ -82,13 +86,12 @@ func AudioInputStreamHandler(c *websocket.Conn) {
 	textPrompt := geminiResponse.Candidates[0].Content.Parts[0].(genai.Text)
 
 	resp := ai2.GeminiFunctionCallFromTextPrompt(textPrompt)
-	log.Println("Gemini is calling function")
-	utils.PrintResponse(resp)
-
 	if resp == nil {
 		log.Println("Gemini Function Call Failed")
 		return
 	}
+	log.Println("Gemini is calling function")
+	utils.PrintResponse(resp)
 
 	textToPrompt, ok := resp.Candidates[0].Content.Parts[0].(genai.Text)
 
@@ -103,13 +106,19 @@ func AudioInputStreamHandler(c *websocket.Conn) {
 	log.Println("Translated Text:", translatedText)
 	log.Println("Emotion from response:", textEmotion)
 
-	err = mqtt.PublishMessage(mqtt.GifKeywordTopic, textEmotion)
+	emotionPayload := TextEmotion{Query: textEmotion}
+	jsonData, err := json.Marshal(emotionPayload)
+	if err != nil {
+		log.Println("Error marshalling payload:", err)
+	}
+
+	err = mqtt.PublishMessage(mqtt.GifKeywordTopic, string(jsonData))
 	if err != nil {
 		return
 	}
 	formattedText := strings.ReplaceAll(translatedText, "\n", "")
 	payload := TextToBeSpeech{Text: formattedText}
-	jsonData, err := json.Marshal(payload)
+	jsonData, err = json.Marshal(payload)
 	if err != nil {
 		log.Println("Error marshalling payload:", err)
 	}

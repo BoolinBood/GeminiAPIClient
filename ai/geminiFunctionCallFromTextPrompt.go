@@ -15,7 +15,8 @@ func GeminiFunctionCallFromTextPrompt(textPrompt genai.Text) *genai.GenerateCont
 
 	client, err := GetGeminiClient()
 	if err != nil {
-		log.Fatalf("Failed to get Gemini client: %v", err)
+		log.Printf("Failed to get Gemini client: %v\n", err)
+		return nil
 	}
 
 	model := client.GenerativeModel(os.Getenv("GEMINI_VERSION"))
@@ -28,6 +29,7 @@ func GeminiFunctionCallFromTextPrompt(textPrompt genai.Text) *genai.GenerateCont
 	prompt := []genai.Part{
 		textPrompt,
 	}
+
 	messageResp, err := session.SendMessage(ctx, prompt...)
 	if err != nil {
 		log.Printf("Failed to generate content: %v\n", err)
@@ -35,8 +37,10 @@ func GeminiFunctionCallFromTextPrompt(textPrompt genai.Text) *genai.GenerateCont
 
 	part := messageResp.Candidates[0].Content.Parts[0]
 	functionToCall, ok := part.(genai.FunctionCall)
+
 	log.Printf("FunctionCall Name: %s\n", functionToCall.Name)
 	log.Printf("FunctionCall Args: %+v\n", functionToCall.Args)
+
 	if !ok {
 		log.Println("Failed to cast function to call")
 	}

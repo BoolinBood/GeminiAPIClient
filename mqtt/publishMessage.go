@@ -6,7 +6,7 @@ import (
 
 const (
 	TextToBeSpeechTopic = "action/audio/speech"
-	GifKeywordTopic     = "ai/gif_keyword"
+	GifKeywordTopic     = "ai/gifkeyword"
 )
 
 func PublishMessage(topic string, message string) error {
